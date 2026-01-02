@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    
+    <style>
+      .responsive-container {
+        display: flex;
+        gap: 20px;
+        padding: 30px;
+        flex-wrap: wrap;
+        /* Ensure the container takes up the full viewport height on mobile */
+        min-height: 100vh; 
+        box-sizing: border-box;
+      }
+
+      .content-box {
+        flex: 1 1 400px;
+        border: 1px solid #ccc; /* For visualization */
+        overflow-y: auto;       /* Adds scrollbars inside the divs if content is too long */
+      }
+
+      /* Target mobile phones in portrait mode */
+      @media (max-width: 600px) and (orientation: portrait) {
+        .responsive-container {
+          flex-direction: column;
+          height: 100vh; /* Lock height to the screen size */
+          padding: 10px; /* Reduce padding to save space */
+          gap: 10px;
+        }
+
+        .content-box {
+          flex: 1;    /* Force both divs to take exactly 50% height */
+          min-height: 0; /* Important: allows flex items to shrink below content size */
+          width: 100%;
+        }
+      }
+    </style>
+
+    <style>
+    html, body {
+    height: 100%;      /* allow body to take full viewport height */
+    margin: 0;
+    }
+
+    body {
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    display: flex;          /* use flex to expand the table */
+    flex-direction: column; /* column layout */
+    display: grid; 
+    place-items: center;
+    }
+
+  table {
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  td, th {
+    border: 1px solid #130130;
+    width: 50px;
+    height: 32px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .header {
+    background: #343a40; /* slightly lighter dark */
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .side {
+    background: #343a40; /* slightly lighter dark */
+    color: #fff;
+    font-weight: bold;
+    width: 60px;
+  }
+
+  .result {
+    background: var(--bs-warning);
+    font-weight: bold;
+  }
+
+  .wide {
+    width: 60px;
+  }
+  td input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  text-align: center;
+  font-size: 14px;
+  background: transparent;
+}
+
+.star-td {
+  position: relative;
+
+  padding: 0;
+  overflow: hidden;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.star-td .star {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.8em;               /* Adjust to fit td */
+  color: var(--bs-warning);   /* Star color */
+  pointer-events: none;         /* So input is clickable */
+  z-index: 0;
+}
+
+.star-td input {
+  position: relative;
+  z-index: 1;                    /* Above the star */
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.star-td .arrow {
+  position: absolute;
+  bottom: 8px;
+  right: 2px;
+  font-size: 0.8em;
+  color: black;
+  z-index: 2;
+  pointer-events: none;
+}
+
+
+.dice-container {
+  user-select: none;
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  gap: 5px;
+}
+
+.die {
+  width: 100px;
+  height: 100px;
+  display: grid;
+  place-items: center;
+  font-size: 120px;
+  line-height: 0.8; /* makes symbol vertically centered */
+  cursor: pointer;
+}
+
+.die.locked {
+  color: var(--bs-warning);
+  opacity: 0.8;
+}
+.face {
+  display: inline-block;
+}
+/* rolling animation */
+@keyframes roll {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(720deg); }
+}
+
+.die.rolling {
+  animation: roll 0.9s ease-in-out;
+}
+
+</style>
+</head>
+<body>
+
+<div class="responsive-container">
+    <div class="content-box table-content">
+        <table id="S">
+        <tr>
+            <th class="header side"></th>
+            <th class="header">↓</th>
+            <th class="header">S</th>
+            <th class="header">↑</th>
+            <th class="header">↑↓</th>
+            <th class="header">↕</th>
+            <th class="header">D</th>
+            <th class="header">Z</th>
+            <th class="header">R</th>
+        </tr>
+
+        <tr>
+        <td class="side">1</td>
+        <td class="star-td"><input id="1:1" onchange="CalculateResult(this)" type="text"></td>
+        <td class="star-td"><input id="1:2" onchange="CalculateResult(this)" type="text"></td>
+        <td class="star-td"><input id="1:3" onchange="CalculateResult(this)" type="text"></td>
+        <td class="star-td" >
+            <input id="1:4" onchange="CalculateResult(this)" type="text">
+            <div class="arrow">↓</div>
+        </td>
+        <td class="star-td"><input id="1:5" onchange="CalculateResult(this)" type="text"></td>
+        <td class="star-td"><input id="1:6" onchange="CalculateResult(this)" type="text"></td>
+        <td class="star-td"><input id="1:7" onchange="CalculateResult(this)" type="text"></td>
+        <td class="star-td"><input id="1:8" onchange="CalculateResult(this)" type="text"></td>
+        <td style="border:none;"></td>
+        </tr>
+
+        <tr>
+        <td class="side">2</td>
+        <td class="star-td"><input id="2:1" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="2:2" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="2:3" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="2:4" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="2:5" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="2:6" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="2:7" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="2:8" onchange="CalculateResult(this)"  type="text"></td>
+        <td style="border:none;"></td>
+        </tr>
+
+        <tr>
+        <td class="side">3</td>
+        <td class="star-td"><input id="3:1" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="3:2" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="3:3" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="3:4" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="3:5" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="3:6" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="3:7" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="3:8" onchange="CalculateResult(this)"  type="text"></td>
+        <td style="border:none;"></td>
+        </tr>
+
+        <tr>
+        <td class="side">4</td>
+        <td class="star-td"><input id="4:1" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="4:2" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="4:3" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="4:4" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="4:5" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="4:6" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="4:7" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="4:8" onchange="CalculateResult(this)"  type="text"></td>
+        <td style="border:none;"></td>
+        </tr>
+
+        <tr>
+        <td class="side">5</td>
+        <td class="star-td"><input id="5:1" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="5:2" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="5:3" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="5:4" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="5:5" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="5:6" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="5:7" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="5:8" onchange="CalculateResult(this)"  type="text"></td>
+        <td style="border:none;"></td>
+        </tr>
+
+        <tr>
+        <td class="side">6</td>
+        <td class="star-td"><input id="6:1" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="6:2" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="6:3" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="6:4" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="6:5" onchange="CalculateResult(this)" type="text"></td>
+        <td class="star-td"><input id="6:6" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="6:7" onchange="CalculateResult(this)"  type="text"></td>
+        <td class="star-td"><input id="6:8" onchange="CalculateResult(this)"  type="text"></td>
+        <td style="border:none; color:transparent;">+70</td>
+        </tr>
+
+
+        <tr class="result">
+            <td class="side">Рез</td>
+            <td id="RS:1">0</td>
+            <td id="RS:2">0</td>
+            <td id="RS:3">0</td>
+            <td id="RS:4">0</td>
+            <td id="RS:5">0</td>
+            <td id="RS:6">0</td>
+            <td id="RS:7">0</td>
+            <td id="RS:8">0</td>
+        </tr>
+        <tr style="user-select: none;">
+          <td style="height:1px;border: 1px solid white; color: white;"></td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+        </tr>
+        </table>
+
+        <!-- MIDDLE TABLE -->
+        <table id="M">
+        <tr>
+            <td class="side wide">+</td>
+                <td class="star-td"><input id="Max:1" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Max:2" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Max:3" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Max:4" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td">
+                    <input id="Max:5" onchange="CalculateResult(this)"  type="text">
+                    <div class="arrow">↑</div>
+                </td>
+                <td class="star-td"><input id="Max:6" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Max:7" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Max:8" onchange="CalculateResult(this)"  type="text"></td>
+                <td style="border:none;"></td>
+        </tr>
+        <tr>
+            <td class="side wide">-</td>
+                <td class="star-td"><input id="Min:1" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Min:2" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Min:3" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Min:4" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td">
+                    <input id="Min:5" onchange="CalculateResult(this)"  type="text">
+                    <div class="arrow">↓</div>
+                </td>
+                <td class="star-td"><input id="Min:6" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Min:7" onchange="CalculateResult(this)"  type="text"></td>
+                <td class="star-td"><input id="Min:8" onchange="CalculateResult(this)"  type="text"></td>
+                <td style="border:none; color:transparent;">+70</td>
+        </tr>
+        <tr class="result">
+            <td class="side wide">Рез</td>
+            <td id="RM:1">0</td>
+            <td id="RM:2">0</td>
+            <td id="RM:3">0</td>
+            <td id="RM:4">0</td>
+            <td id="RM:5">0</td>
+            <td id="RM:6">0</td>
+            <td id="RM:7">0</td>
+            <td id="RM:8">0</td>
+        </tr>
+        <tr style="user-select: none;">
+          <td style="height:1px;border: 1px solid white; color: white;"></td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+        </tr>
+        </table>
+
+        <!-- BOTTOM TABLE -->
+        <table id="B">
+        <tr><td class="side">T</td>
+                <td><input id="T:1" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="T:2" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="T:3" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="T:4" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="T:5" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="T:6" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="T:7" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="T:8" onchange="CalculateResult(this)" type="text"></td>
+                <td style="border:none;">+30</td>
+        </tr>
+        <tr><td class="side">S</td>
+                <td><input id="S:1" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="S:2" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="S:3" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="S:4" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="S:5" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="S:6" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="S:7" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="S:8" onchange="CalculateResult(this)" type="text"></td>
+                <td style="border:none;">+40</td>
+        </tr>
+        <tr><td class="side">F</td>
+                <td><input id="F:1" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="F:2" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="F:3" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="F:4" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="F:5" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="F:6" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="F:7" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="F:8" onchange="CalculateResult(this)" type="text"></td>
+                <td style="border:none;">+50</td>
+        </tr>
+        <tr><td class="side">K</td>
+                <td><input id="K:1" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="K:2" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="K:3" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="K:4" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="K:5" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="K:6" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="K:7" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="K:8" onchange="CalculateResult(this)" type="text"></td>
+                <td style="border:none;">+60</td>
+        </tr>
+        <tr>
+            <td class="side">J</td>
+                <td><input id="J:1" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="J:2" onchange="CalculateResult(this)" type="text"></td>
+                <td class="star-td"><input id="J:3" onchange="CalculateResult(this)" type="text"></td>
+                <td class="star-td">
+                    <input id="J:4" onchange="CalculateResult(this)" type="text">
+                    <div class="arrow">↑</div>
+                </td>
+                <td><input id="J:5" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="J:6" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="J:7" onchange="CalculateResult(this)" type="text"></td>
+                <td><input id="J:8" onchange="CalculateResult(this)" type="text"></td>
+                <td style="border:none;">+70</td>
+        </tr>
+        <tr class="result">
+            <td class="side">Рез</td>
+            <td id="RB:1">0</td>
+            <td id="RB:2">0</td>
+            <td id="RB:3">0</td>
+            <td id="RB:4">0</td>
+            <td id="RB:5">0</td>
+            <td id="RB:6">0</td>
+            <td id="RB:7">0</td>
+            <td id="RB:8">0</td>
+        </tr>
+        <tr style="user-select: none;">
+          <td style="height:1px;border: 1px solid white; color: white;"></td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+          <td style="height:1px;border: 1px solid white; color: white;">130</td>
+        </tr>
+        </table>
+    </div>
+        <div sclass="content-box score-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px;">
+              <div style="display: flex; align-items: center;">
+                  <span style="font-size: 60px; color: var(--bs-warning); line-height: 1;">★</span> 
+                  <span style="font-size: 40px; font-weight: bold; margin-left: 10px;" id="Star Number">0</span>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="color: var(--bs-warning); font-size: 24px;">Резултат</span> 
+                  <span style="font-size: 40px; font-weight: bold;" id="final result">0</span>
+              </div>
+        </div>
+        <div style="padding-top: 30px;" class="dice-container">
+            <div class="die">
+                <span class="face">⚀</span>
+            </div>
+            <div class="die">
+                <span class="face">⚁</span>
+            </div>
+            <div class="die">
+                <span class="face">⚂</span>
+            </div>
+            <div class="die">
+                <span class="face">⚃</span>
+            </div>
+            <div class="die">
+                <span class="face">⚄</span>
+            </div>
+            <div class="die">
+                <span class="face">⚅</span>
+            </div>
+        </div>
+        <div style="padding-top: 20px;">
+            <button id="roll-btn" style="width:100%;" class="btn btn-warning">Roll Dice</button>
+        </div>
+    </div>
+</div>
+
+<script>
+  function CalculateResult(input) {
+    const id = input.id;
+    const table = input.closest("table");
+    if (!table) return;
+
+    const parts = id.split(":");
+    const targetPart1 = parts[1];
+    const targetPart = parts[0];
+
+    const container = input.closest("td");
+    const numb = Number(input.value) || 0;
+    const starValues = [5, 10, 15, 20, 25, 30];
+
+    if ((targetPart !== "5" && starValues.includes(numb)) || (targetPart === "5" && numb === 25)) {
+        if (!container.querySelector(".star")) {
+            const star = document.createElement("span");
+            star.className = "star";
+            star.textContent = "★";
+            container.appendChild(star);
+        }
+    } else {
+        container.querySelector(".star")?.remove();
+    }
+
+    // ---------- TABLE S ----------
+    if (table.id === "S") {
+        const targetTd = document.querySelector(`td[id="RS:${targetPart1}"]`);
+        if (targetTd) {
+            let sum = 0;
+            for (let i = 1; i <= 6; i++) {
+                const inputEl = document.querySelector(`input[id="${i}:${targetPart1}"]`);
+                sum += inputEl ? Number(inputEl.value) || 0 : 0;
+            }
+
+            if (sum >= 60) sum += 30;
+            targetTd.textContent = sum;
+
+            if (parts[0] == 1) {
+                const targetA = document.querySelector(`td[id="RM:${targetPart1}"]`);
+
+                const inputE0 = document.querySelector(`input[id="1:${targetPart1}"]`);
+                const inputEl = document.querySelector(`input[id="Max:${targetPart1}"]`);
+                const inputE2 = document.querySelector(`input[id="Min:${targetPart1}"]`);
+
+                let mult = inputE0 ? Number(inputE0.value) || 0 : 0;
+                let max  = inputEl ? Number(inputEl.value) || 0 : 0;
+                let min  = inputE2 ? Number(inputE2.value) || 0 : 0;
+
+                let MMRes = 0; // ✅ DECLARED
+
+                if (min !== 0 && max !== 0) {
+                    MMRes = (max - min) * mult;
+                }
+
+                if (targetA) targetA.textContent = MMRes;
+            }
+        }
+
+    // ---------- TABLE M ----------
+    } else if (table.id === "M") {
+        const targetTd = document.querySelector(`td[id="RM:${targetPart1}"]`);
+        if (targetTd) {
+            const inputE0 = document.querySelector(`input[id="1:${targetPart1}"]`);
+            const inputEl = document.querySelector(`input[id="Max:${targetPart1}"]`);
+            const inputE2 = document.querySelector(`input[id="Min:${targetPart1}"]`);
+
+            let mult = inputE0 ? Number(inputE0.value) || 0 : 0;
+            let max  = inputEl ? Number(inputEl.value) || 0 : 0;
+            let min  = inputE2 ? Number(inputE2.value) || 0 : 0;
+
+            let MMRes = 0; // ✅ DECLARED
+
+            if (min !== 0 && max !== 0) {
+                MMRes = (max - min) * mult;
+            }
+            if (MMRes >= 60) MMRes += 30;
+            targetTd.textContent = MMRes;
+        }
+
+    // ---------- TABLE B ----------
+    } else if (table.id === "B") {
+        const targetTd = document.querySelector(`td[id="RB:${targetPart1}"]`);
+        if (targetTd) {
+            const T = Number(document.querySelector(`input[id="T:${targetPart1}"]`)?.value) || 0;
+            const S = Number(document.querySelector(`input[id="S:${targetPart1}"]`)?.value) || 0;
+            const F = Number(document.querySelector(`input[id="F:${targetPart1}"]`)?.value) || 0;
+            const K = Number(document.querySelector(`input[id="K:${targetPart1}"]`)?.value) || 0;
+            const J = Number(document.querySelector(`input[id="J:${targetPart1}"]`)?.value) || 0;
+
+            targetTd.textContent = T + S + F + K + J;
+        }
+    }
+
+    FinalResultTally();
+    StarNumberCalculator();
+}
+  
+</script>
+
+<script>
+const diceFaces = ["⚀","⚁","⚂","⚃","⚄","⚅"];
+
+// toggle lock on click
+document.querySelectorAll(".die").forEach(die => {
+  die.addEventListener("click", () => {
+    die.classList.toggle("locked");
+  });
+});
+
+// helper function for more uniform dice randomness
+function rollDie() {
+  let result;
+  for (let i = 0; i < 10; i++) { // simulate multiple internal rolls
+    const index = Math.floor(Math.random() * diceFaces.length);
+    result = diceFaces[index];
+  }
+  return result;
+}
+
+// roll dice button
+const rollBtn = document.getElementById("roll-btn");
+rollBtn.addEventListener("click", () => {
+  document.querySelectorAll(".die").forEach(die => {
+    if (!die.classList.contains("locked")) {
+      die.classList.add("rolling");
+
+      setTimeout(() => {
+        die.querySelector(".face").textContent = rollDie();
+        die.classList.remove("rolling");
+      }, 500);
+    }
+  });
+});
+</script>
+
+<script>
+  function FinalResultTally() 
+  {
+    let total = 0;
+
+    // find all <tr> elements with class "result"
+    const resultRows = document.querySelectorAll("tr.result");
+
+    resultRows.forEach(tr => {
+      // get all td elements inside this tr
+      const tds = tr.querySelectorAll("td");
+
+      tds.forEach(td => {
+        // extract text, convert to number
+        const value = Number(td.textContent.trim());
+
+        // Number("anything") => NaN, so default to 0
+        total += isNaN(value) ? 0 : value;
+      });
+    });
+    const finalresultspan = document.querySelector(`span[id="final result"]`);
+    finalresultspan.textContent = total;
+  }
+</script>
+
+<script>
+  function StarNumberCalculator() 
+  {
+    let count = 0;
+
+    // get tables S and M
+    const tables = document.querySelectorAll('table#S, table#M');
+
+    tables.forEach(table => 
+    {
+      // find all td elements inside each table
+      const tds = table.querySelectorAll('td');
+
+      tds.forEach(td => {
+        // check if this td contains a span.star
+        if (td.querySelector('span.star')) 
+        {
+          count++;
+        }
+      });
+    });
+
+    const starresultspan = document.querySelector(`span[id="Star Number"]`);
+    starresultspan.textContent = count;
+
+    return count; // useful if you need the value elsewhere
+  }
+</script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</body>
+</html>
